@@ -12,12 +12,16 @@ func (app *application) logError(r *http.Request, err error) {
 func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, status int, message any) {
 	errResponse := envelope{"error": message}
 
-	err := app.writeJSON(w, http.StatusOK, errResponse, nil)
+	err := app.writeJSON(w, status, errResponse, nil)
 	if err != nil {
 		app.logError(r, err)
 		w.WriteHeader(500)
 	}
 
+}
+
+func (app *application) failedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
+	app.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
 }
 
 // The serverErrorResponse() method will be used when our application encounters an

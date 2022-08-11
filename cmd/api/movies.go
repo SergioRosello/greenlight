@@ -6,27 +6,47 @@ import (
 	"time"
 
 	"github.com/SergioRosello/greenlight/internal/data"
+	"github.com/SergioRosello/greenlight/internal/validator"
 )
 
 // Add a createMovieHandler for the "POST /v1/movies" endpoint. For now we simply
 // return a plain-text placeholder response.
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Title   string   `json:"title"`
-		Year    int32    `json:"year"`
-		Runtime int32    `json:"runtime"`
-		Genres  []string `json:"genres"`
+		Title   string       `json:"title"`
+		Year    int32        `json:"year"`
+		Runtime data.Runtime `json:"runtime"`
+		Genres  []string     `json:"genres"`
 	}
-
-	// Get the request body, and marshall into the Json object
 
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	// dump request body into response, to valdiate it works
 
+	// Copy the values from the input struct to a new Movie struct.
+	movie := &data.Movie{
+		Title:   input.Title,
+		Year:    input.Year,
+		Runtime: input.Runtime,
+		Genres:  input.Genres,
+	}
+
+	// Initialize a new Validator.
+	v := validator.New()
+
+	// Call the ValidateMovie() function and return a response containing the errors if
+	// any of the checks fail.
+	// I have decided to diverge from the let-go-further book (chapter 4.5 - validating JSON input)
+	// because I believe Movies should not depend on any external packages.
+	// If we follow the book's advice, (which is to add a
+	// ValidateMovie(v *validator.Validator, movie *Movie) in the internal/data/movies.go file)
+	// then package data impotrs validator, and therefore depends on it and it's behaviour.
+	if v.ValidateMovie(movie); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
 	fmt.Fprintf(w, `%+v`, input)
 }
 
