@@ -13,6 +13,7 @@ import (
 	// Import the pq driver so that it can register itself with the database/sql
 	// package. Note that we alias this import to the blank identifier, to stop the Go
 	// compiler complaining that the package isn't being used.
+	"github.com/SergioRosello/greenlight/internal/data/models"
 	_ "github.com/lib/pq"
 )
 
@@ -43,6 +44,7 @@ type config struct {
 type application struct {
 	config config
 	logger *log.Logger
+	data   models.Models
 }
 
 func main() {
@@ -86,6 +88,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
+		data:   models.NewModels(db),
 	}
 
 	srv := &http.Server{
