@@ -24,6 +24,13 @@ func (app *application) failedValidationResponse(w http.ResponseWriter, r *http.
 	app.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
 }
 
+// Quite possibly we have had a race condition, we will have to notify the client
+// they should re-send the request.
+func (app *application) editConflictResponse(w http.ResponseWriter, r *http.Request) {
+	message := "unable to update the record due to an edit conflict, please try again"
+	app.errorResponse(w, r, http.StatusConflict, message)
+}
+
 // The serverErrorResponse() method will be used when our application encounters an
 // unexpected problem at runtime. It logs the detailed error message, then uses the
 // errorResponse() helper to send a 500 Internal Server Error status code and JSON
