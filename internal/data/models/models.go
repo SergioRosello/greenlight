@@ -20,6 +20,7 @@ type Models struct {
 	Movies interface {
 		Insert(movie *data.Movie) error
 		Get(id int64) (*data.Movie, error)
+		GetAll(title string, genres []string, filters data.Filters) ([]*data.Movie, error)
 		Update(movie *data.Movie) error
 		Delete(id int64) error
 	}
