@@ -52,14 +52,14 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	// call the getAll movies, to retrieve all the movies
-	movies, err := app.data.Movies.GetAll(input.Title, input.Genres, input.Filters)
+	movies, metadata, err := app.data.Movies.GetAll(input.Title, input.Genres, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	// Send a JSON response containing the movie data.
-	err = app.writeJSON(w, http.StatusOK, envelope{"movies": movies}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"metadata": metadata, "movies": movies}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
