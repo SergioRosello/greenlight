@@ -24,6 +24,11 @@ type Models struct {
 		Update(movie *data.Movie) error
 		Delete(id int64) error
 	}
+	Users interface {
+		Insert(*data.User) error
+		GetByEmail(email string) (*data.User, error)
+		Update(movie *data.User) error
+	}
 }
 
 // For ease of use, we also add a New() method which returns a Models struct containing
