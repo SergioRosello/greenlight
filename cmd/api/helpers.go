@@ -204,3 +204,23 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 
 	return nil
 }
+
+// The background() helper accepts an arbitrary function as a parameter.
+func (app *application) background(fn func()) {
+	// Increment the waitGroup counter.
+	app.wg.Add(1)
+	// Launch a background goroutine.
+	go func() {
+		// Use defer to decrement the wg counter before the goroutine returns
+		defer app.wg.Done()
+		// Recover any panic.
+		defer func() {
+			if err := recover(); err != nil {
+				app.logger.PrintError(fmt.Errorf("%s", err), nil)
+			}
+		}()
+
+		// Execute the arbitrary function that we passed as the parameter.
+		fn()
+	}()
+}

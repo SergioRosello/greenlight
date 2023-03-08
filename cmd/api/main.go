@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"os"
+	"sync"
 	"time"
 
 	// Import the pq driver so that it can register itself with the database/sql
@@ -61,6 +62,7 @@ type application struct {
 	logger *jsonlog.Logger
 	data   models.Models
 	mailer mailer.Mailer
+	wg     sync.WaitGroup
 }
 
 func main() {
