@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/SergioRosello/greenlight/internal/data"
 )
@@ -29,6 +30,11 @@ type Models struct {
 		GetByEmail(email string) (*data.User, error)
 		Update(movie *data.User) error
 	}
+	Tokens interface {
+		New(userID int64, ttl time.Duration, scope string) (*data.Token, error)
+		Insert(token *data.Token) error
+		DeleteAllForUser(scope string, userID int64) error
+	}
 }
 
 // For ease of use, we also add a New() method which returns a Models struct containing
@@ -36,6 +42,7 @@ type Models struct {
 func NewModels(db *sql.DB) Models {
 	return Models{
 		Movies: MovieModel{DB: db},
+		Tokens: TokenModel{DB: db},
 		Users:  UserModel{DB: db},
 	}
 }
@@ -45,6 +52,7 @@ func NewModels(db *sql.DB) Models {
 func NewMockModels() Models {
 	return Models{
 		Movies: MockMovieModel{},
+		Tokens: TokenModel{},
 		Users:  MockUserModel{},
 	}
 }
