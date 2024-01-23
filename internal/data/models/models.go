@@ -28,6 +28,7 @@ type Models struct {
 	Users interface {
 		Insert(*data.User) error
 		GetByEmail(email string) (*data.User, error)
+		GetForToken(tokenScope, tokenPlaintext string) (*data.User, error)
 		Update(movie *data.User) error
 	}
 	Tokens interface {
