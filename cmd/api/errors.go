@@ -12,6 +12,13 @@ func (app *application) logError(r *http.Request, err error) {
 	})
 }
 
+func (app *application) invalidAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("WWW-Authenticate", "Bearer")
+
+	message := "invalid or missing authentication token"
+	app.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
 func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, status int, message any) {
 	errResponse := envelope{"error": message}
 
