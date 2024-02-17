@@ -18,6 +18,9 @@ var (
 // Create a Models struct which wraps the MovieModel. We'll add other models to this,
 // like a UserModel and PermissionModel, as our build progresses.
 type Models struct {
+	Permissions interface {
+		GetAllForUser(userID int64) (Permissions, error)
+	}
 	Movies interface {
 		Insert(movie *data.Movie) error
 		Get(id int64) (*data.Movie, error)
@@ -42,9 +45,10 @@ type Models struct {
 // the initialized MovieModel.
 func NewModels(db *sql.DB) Models {
 	return Models{
-		Movies: MovieModel{DB: db},
-		Tokens: TokenModel{DB: db},
-		Users:  UserModel{DB: db},
+		Permissions: PermissionModel{DB: db},
+		Movies:      MovieModel{DB: db},
+		Tokens:      TokenModel{DB: db},
+		Users:       UserModel{DB: db},
 	}
 }
 
@@ -52,8 +56,9 @@ func NewModels(db *sql.DB) Models {
 // only.
 func NewMockModels() Models {
 	return Models{
-		Movies: MockMovieModel{},
-		Tokens: TokenModel{},
-		Users:  MockUserModel{},
+		Permissions: PermissionModel{},
+		Movies:      MockMovieModel{},
+		Tokens:      TokenModel{},
+		Users:       MockUserModel{},
 	}
 }
