@@ -20,6 +20,7 @@ var (
 type Models struct {
 	Permissions interface {
 		GetAllForUser(userID int64) (Permissions, error)
+		AddForUser(UserID int64, codes ...string) error
 	}
 	Movies interface {
 		Insert(movie *data.Movie) error
