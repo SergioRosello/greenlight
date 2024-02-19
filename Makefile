@@ -5,4 +5,4 @@ build:
 
 run: build
 	export $(xargs <.env)
-	./greenlight
+	./greenlight -cors-trusted-origins="http://localhost:9000 http://localhost:9001"
