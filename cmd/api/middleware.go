@@ -4,7 +4,6 @@ import (
 	"errors"
 	"expvar"
 	"fmt"
-	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"github.com/SergioRosello/greenlight/internal/data"
 	"github.com/SergioRosello/greenlight/internal/data/models"
 	"github.com/SergioRosello/greenlight/internal/validator"
+	"github.com/tomasen/realip"
 	"golang.org/x/time/rate"
 )
 
@@ -307,11 +307,9 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if app.config.limiter.enabled {
-			ip, _, err := net.SplitHostPort(r.RemoteAddr)
-			if err != nil {
-				app.serverErrorResponse(w, r, err)
-				return
-			}
+			// Get IP either from request ip, or using 'X-Forwarded-For' header
+			// sent by proxy
+			ip := realip.FromRequest(r)
 
 			mu.Lock()
 
