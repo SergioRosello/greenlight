@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -16,11 +17,43 @@ import (
 	"golang.org/x/time/rate"
 )
 
+type metricsResponseWriter struct {
+	http.ResponseWriter
+	statusCode    int
+	headerWritten bool
+}
+
+func newMetricsResponseWriter(w http.ResponseWriter) *metricsResponseWriter {
+	return &metricsResponseWriter{
+		ResponseWriter: w,
+		statusCode:     http.StatusOK,
+	}
+}
+
+func (mw *metricsResponseWriter) Write(b []byte) (int, error) {
+	mw.headerWritten = true
+	return mw.ResponseWriter.Write(b)
+}
+
+func (mw *metricsResponseWriter) WriteHeader(statusCode int) {
+	mw.ResponseWriter.WriteHeader(statusCode)
+
+	if !mw.headerWritten {
+		mw.statusCode = statusCode
+		mw.headerWritten = true
+	}
+}
+
+func (mw *metricsResponseWriter) Unwrap() http.ResponseWriter {
+	return mw.ResponseWriter
+}
+
 func (app *application) metrics(next http.Handler) http.Handler {
 	var (
 		totalRequestsReceived           = expvar.NewInt("total_requests_received")
 		totalResponsesSent              = expvar.NewInt("total_responses_sent")
 		totalProcessingTimeMicroseconds = expvar.NewInt("total_processing_time_μs")
+		totalResponsesSentByStatus      = expvar.NewMap("total_responses_sent_by_status")
 	)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -28,12 +61,25 @@ func (app *application) metrics(next http.Handler) http.Handler {
 		// Add 1 to the total requests received
 		totalRequestsReceived.Add(1)
 
-		// Call the next handler in the chain
-		next.ServeHTTP(w, r)
+		// Create a new metricsResponseWriter, which wraps the original
+		// http.ResponseWriter value that the metrics middleware received.
+		mw := newMetricsResponseWriter(w)
+
+		// Call the next handler in the chain using the metricsResponseWriter
+		// as the http.ResponseWriter value.
+		next.ServeHTTP(mw, r)
 
 		// On the way back up the middleware chain, increment the number of
 		// responses by 1
 		totalResponsesSent.Add(1)
+
+		// At this point, the response status should be stored in the
+		// mw.statusCode field. Note that the expvar map is string-keyed, so we
+		// need to use the strconv.Itoa() function to convert the status code
+		// (which is an integer) to a string. Then we use the Add() method on
+		// our new totalResponsesSentByStatus map to increment the count for the
+		// given status code by 1.
+		totalResponsesSentByStatus.Add(strconv.Itoa(mw.statusCode), 1)
 
 		// Calculate the number of microseconds since we started handling the request,
 		// Then increment the total processing time by this ammount
